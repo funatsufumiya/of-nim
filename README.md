@@ -21,3 +21,7 @@ $ ./scripts/init_mac.sh
 ```bash
 $ nim c -r examples/hello.nim
 ```
+
+## TODO
+
+- oF proc bindings
