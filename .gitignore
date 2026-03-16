@@ -1,3 +1,4 @@
 *.exe
 .vscode
-lib/osx/openFrameworks.a
+lib/*
+!lib/.gitkeep
