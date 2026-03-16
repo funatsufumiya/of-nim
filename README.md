@@ -1,5 +1,7 @@
 # of-nim
 
+openFrameworks v0.12.0, nim 2.2.8
+
 WORK-IN-PROGRESS, but works
 
 ## Pre-requisites
