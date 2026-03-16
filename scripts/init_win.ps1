@@ -1,6 +1,6 @@
 # Edit these two constants to point to your release assets (direct download URLs)
-$LibUrl = 'https://github.com/funatsufumiya/of-nim/releases/download/v0.1/vs_x64_libs.zip'
-$DllUrl = 'https://github.com/funatsufumiya/of-nim/releases/download/v0.1/vs_x64_dlls.zip'
+$LibUrl = 'https://github.com/funatsufumiya/of-nim/releases/download/v0.1.0/vs_x64_libs.zip'
+$DllUrl = 'https://github.com/funatsufumiya/of-nim/releases/download/v0.1.0/vs_x64_dlls.zip'
 
 # Optional: change extraction destinations relative to repo root
 $LibDest = 'lib\\vs\\x64'

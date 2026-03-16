@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-LIB_URL="https://github.com/funatsufumiya/of-nim/releases/download/v0.1/osx_libs.zip"
-DYLIB_URL="https://github.com/funatsufumiya/of-nim/releases/download/v0.1/osx_dylibs.zip"
+LIB_URL="https://github.com/funatsufumiya/of-nim/releases/download/v0.1.0/osx_libs.zip"
+DYLIB_URL="https://github.com/funatsufumiya/of-nim/releases/download/v0.1.0/osx_dylibs.zip"
 LIB_DEST=lib/osx
 DYLIB_DEST=.
 
