@@ -27,3 +27,5 @@ $ nim c -r examples/hello.nim
 ## TODO
 
 - oF proc bindings
+- oF addons support
+- project generator
