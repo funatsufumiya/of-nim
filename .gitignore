@@ -2,3 +2,5 @@
 .vscode
 lib/*
 !lib/.gitkeep
+/*.dylib
+/*.dll
