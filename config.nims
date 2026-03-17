@@ -46,6 +46,19 @@ switch("passC", "-Iinclude/sound")
 switch("passC", "-Iinclude/video")
 switch("passC", "-Iutils")
 
+# Load addon parsing logic from a separate nimscript. The parser will only run
+# when an `addons.make` file is present in the project; if you keep your
+# openFrameworks addons in a different location, set the environment
+# variable `OF_ADDONS_PATH` to that addons folder before running.
+include "addons.nims"
+
+# try project-local addons.make first
+let projectAddonsMake = joinPath(projectRoot, "addons.make")
+if fileExists(projectAddonsMake):
+  let localAddonsDir = joinPath(projectRoot, "addons")
+  if dirExists(localAddonsDir):
+    processAddons(projectAddonsMake, localAddonsDir, projectRoot)
+
 # const ofLibPath =
 when defined(windows):
   switch("passL", "lib\\vs\\x64\\openframeworksLib.lib")
