@@ -1,33 +1,31 @@
-# Nim-friendly wrapper for the C++ ofn_* callbacks
-
 type
-  UpdateFn* = proc(user: pointer){.cdecl.}
-  DrawFn*   = proc(user: pointer){.cdecl.}
-  KeyPressedFn*    = proc(user: pointer, key: cint){.cdecl.}
-  KeyReleaseFn* = proc(user: pointer, key: cint){.cdecl.}
-  MouseMoveFn* = proc(user: pointer, x: cint, y: cint){.cdecl.}
-  MouseButtonFn* = proc(user: pointer, x: cint, y: cint, button: cint){.cdecl.}
-  EnterExitFn* = proc(user: pointer, x: cint, y: cint){.cdecl.}
-  ResizeFn* = proc(user: pointer, w: cint, h: cint){.cdecl.}
-  DragFn* = proc(user: pointer, info: pointer){.cdecl.}
-  MessageFn* = proc(user: pointer, msg: pointer){.cdecl.}
-  ExitFn* = proc(user: pointer){.cdecl.}
+  UpdateFn* = proc(){.cdecl.}
+  DrawFn*   = proc(){.cdecl.}
+  KeyPressedFn*    = proc(key: cint){.cdecl.}
+  KeyReleaseFn* = proc(key: cint){.cdecl.}
+  MouseMoveFn* = proc(x: cint, y: cint){.cdecl.}
+  MouseButtonFn* = proc(x: cint, y: cint, button: cint){.cdecl.}
+  EnterExitFn* = proc(x: cint, y: cint){.cdecl.}
+  ResizeFn* = proc(w: cint, h: cint){.cdecl.}
+  DragFn* = proc(info: pointer){.cdecl.}
+  MessageFn* = proc(msg: pointer){.cdecl.}
+  ExitFn* = proc(){.cdecl.}
 
 {.emit: """
 #include <memory>
 #include "ofMain.h"
 
-using UpdateFn = void(*)(void*);
-using DrawFn   = void(*)(void*);
-using KeyPressedFn    = void(*)(void*, int);
-using KeyReleaseFn = void(*)(void*, int);
-using MouseMoveFn = void(*)(void*, int, int);
-using MouseButtonFn = void(*)(void*, int, int, int);
-using EnterExitFn = void(*)(void*, int, int);
-using ResizeFn = void(*)(void*, int, int);
-using DragFn = void(*)(void*, void*);
-using MessageFn = void(*)(void*, void*);
-using ExitFn = void(*)(void*);
+using UpdateFn = void(*)();
+using DrawFn   = void(*)();
+using KeyPressedFn    = void(*)(int);
+using KeyReleaseFn = void(*)(int);
+using MouseMoveFn = void(*)(int, int);
+using MouseButtonFn = void(*)(int, int, int);
+using EnterExitFn = void(*)(int, int);
+using ResizeFn = void(*)(int, int);
+using DragFn = void(*)(void*);
+using MessageFn = void(*)(void*);
+using ExitFn = void(*)();
 
 struct NimCallbacks {
   UpdateFn update;
@@ -44,14 +42,12 @@ struct NimCallbacks {
   DragFn dragEvent;
   MessageFn gotMessage;
   ExitFn exit;
-  void* user;
 };
 
 inline NimCallbacks* ofn_makeCallbacks() {
   NimCallbacks* p = new NimCallbacks();
   p->update = nullptr;
   p->draw = nullptr;
-  p->user = nullptr;
   p->keyPressed = nullptr;
   p->keyReleased = nullptr;
   p->mouseMoved = nullptr;
@@ -71,21 +67,21 @@ class NimApp : public ofBaseApp {
   NimCallbacks* cb;
 public:
   NimApp(NimCallbacks* c): cb(c) {}
-  void setup() override { if(cb && cb->update) cb->update(cb->user); }
-  void update() override { if(cb && cb->update) cb->update(cb->user); }
-  void draw() override   { if(cb && cb->draw)   cb->draw(cb->user);  }
-  void keyPressed(int k) override { if(cb && cb->keyPressed) cb->keyPressed(cb->user, k); }
-  void keyReleased(int k) override { if(cb && cb->keyReleased) cb->keyReleased(cb->user, k); }
-  void mouseMoved(int x, int y) override { if(cb && cb->mouseMoved) cb->mouseMoved(cb->user, x, y); }
-  void mouseDragged(int x, int y, int button) override { if(cb && cb->mouseDragged) cb->mouseDragged(cb->user, x, y, button); }
-  void mousePressed(int x, int y, int button) override { if(cb && cb->mousePressed) cb->mousePressed(cb->user, x, y, button); }
-  void mouseReleased(int x, int y, int button) override { if(cb && cb->mouseReleased) cb->mouseReleased(cb->user, x, y, button); }
-  void mouseEntered(int x, int y) override { if(cb && cb->mouseEntered) cb->mouseEntered(cb->user, x, y); }
-  void mouseExited(int x, int y) override { if(cb && cb->mouseExited) cb->mouseExited(cb->user, x, y); }
-  void windowResized(int w, int h) override { if(cb && cb->windowResized) cb->windowResized(cb->user, w, h); }
-  void dragEvent(ofDragInfo dragInfo) override { if(cb && cb->dragEvent) cb->dragEvent(cb->user, (void*)&dragInfo); }
-  void gotMessage(ofMessage msg) override { if(cb && cb->gotMessage) cb->gotMessage(cb->user, (void*)&msg); }
-  void exit() override { if(cb && cb->exit) cb->exit(cb->user); }
+  void setup() override { if(cb && cb->update) cb->update(); }
+  void update() override { if(cb && cb->update) cb->update(); }
+  void draw() override   { if(cb && cb->draw)   cb->draw();  }
+  void keyPressed(int k) override { if(cb && cb->keyPressed) cb->keyPressed(k); }
+  void keyReleased(int k) override { if(cb && cb->keyReleased) cb->keyReleased(k); }
+  void mouseMoved(int x, int y) override { if(cb && cb->mouseMoved) cb->mouseMoved(x, y); }
+  void mouseDragged(int x, int y, int button) override { if(cb && cb->mouseDragged) cb->mouseDragged(x, y, button); }
+  void mousePressed(int x, int y, int button) override { if(cb && cb->mousePressed) cb->mousePressed(x, y, button); }
+  void mouseReleased(int x, int y, int button) override { if(cb && cb->mouseReleased) cb->mouseReleased(x, y, button); }
+  void mouseEntered(int x, int y) override { if(cb && cb->mouseEntered) cb->mouseEntered(x, y); }
+  void mouseExited(int x, int y) override { if(cb && cb->mouseExited) cb->mouseExited(x, y); }
+  void windowResized(int w, int h) override { if(cb && cb->windowResized) cb->windowResized(w, h); }
+  void dragEvent(ofDragInfo dragInfo) override { if(cb && cb->dragEvent) cb->dragEvent((void*)&dragInfo); }
+  void gotMessage(ofMessage msg) override { if(cb && cb->gotMessage) cb->gotMessage((void*)&msg); }
+  void exit() override { if(cb && cb->exit) cb->exit(); }
 };
 
 inline void ofn_runWithCallbacks(int w, int h, NimCallbacks* cb) {
@@ -134,7 +130,6 @@ extern "C" {
   inline void ofn_setUpdate_c(void* cb, UpdateFn f) { ((NimCallbacks*)cb)->update = f; }
   inline void ofn_setDraw_c(void* cb, DrawFn f) { ((NimCallbacks*)cb)->draw = f; }
   inline void ofn_setKeyPressed_c(void* cb, KeyPressedFn f) { ((NimCallbacks*)cb)->keyPressed = f; }
-  inline void ofn_setUser_c(void* cb, void* user) { ((NimCallbacks*)cb)->user = user; }
   inline void ofn_setKeyReleased_c(void* cb, KeyReleaseFn f) { ((NimCallbacks*)cb)->keyReleased = f; }
   inline void ofn_setMouseMoved_c(void* cb, MouseMoveFn f) { ((NimCallbacks*)cb)->mouseMoved = f; }
   inline void ofn_setMouseDragged_c(void* cb, MouseButtonFn f) { ((NimCallbacks*)cb)->mouseDragged = f; }
@@ -156,7 +151,6 @@ proc ofn_runWithCallbacks_settings_c(settings: pointer, cb: pointer) {.importc: 
 
 proc ofn_setUpdate_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setUpdate_c", cdecl.}
 proc ofn_setDraw_c(cb: pointer, f: DrawFn) {.importc: "ofn_setDraw_c", cdecl.}
-proc ofn_setUser_c(cb: pointer, user: pointer) {.importc: "ofn_setUser_c", cdecl.}
 proc ofn_setKeyPressed_c(cb: pointer, f: KeyPressedFn) {.importc: "ofn_setKeyPressed_c", cdecl.}
 proc ofn_setKeyReleased_c(cb: pointer, f: KeyReleaseFn) {.importc: "ofn_setKeyReleased_c", cdecl.}
 proc ofn_setMouseMoved_c(cb: pointer, f: MouseMoveFn) {.importc: "ofn_setMouseMoved_c", cdecl.}
@@ -172,7 +166,6 @@ proc ofn_setExit_c(cb: pointer, f: ExitFn) {.importc: "ofn_setExit_c", cdecl.}
 
 type OfApp* = object
   cb*: pointer
-  user*: pointer
 
 type OfAppConfig* = object
   update*: UpdateFn
@@ -189,7 +182,6 @@ type OfAppConfig* = object
   dragEvent*: DragFn
   gotMessage*: MessageFn
   exit*: ExitFn
-  user*: pointer
 
 proc makeOfApp*(
   update: UpdateFn = nil;
@@ -206,11 +198,10 @@ proc makeOfApp*(
   dragEvent: DragFn = nil;
   gotMessage: MessageFn = nil;
   exit: ExitFn = nil;
-  user: pointer = nil): OfApp =
+  ): OfApp =
   
   var a: OfApp
   a.cb = ofn_makeCallbacks_c()
-  a.user = user
   if update != nil: ofn_setUpdate_c(a.cb, update)
   if draw != nil: ofn_setDraw_c(a.cb, draw)
   if keyPressed != nil: ofn_setKeyPressed_c(a.cb, keyPressed)
@@ -225,7 +216,6 @@ proc makeOfApp*(
   if dragEvent != nil: ofn_setDragEvent_c(a.cb, dragEvent)
   if gotMessage != nil: ofn_setGotMessage_c(a.cb, gotMessage)
   if exit != nil: ofn_setExit_c(a.cb, exit)
-  if user != nil: ofn_setUser_c(a.cb, user)
   return a
 
 proc makeOfApp*(cfg: OfAppConfig): OfApp =
@@ -243,8 +233,8 @@ proc makeOfApp*(cfg: OfAppConfig): OfApp =
     windowResized = cfg.windowResized,
     dragEvent = cfg.dragEvent,
     gotMessage = cfg.gotMessage,
-    exit = cfg.exit,
-    user = cfg.user)
+    exit = cfg.exit
+    )
 
 proc run*(a: var OfApp; w: int = 800; h: int = 600; fullscreen: bool = false) =
   ofn_runWithCallbacks_fullscreen_c(cast[cint](w), cast[cint](h), a.cb, fullscreen)

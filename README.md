@@ -15,12 +15,12 @@ import nimline
 
 proc red {.importcpp: "ofColor::red" .}
 
-proc update(user: pointer) {.cdecl.} =
+proc update() {.cdecl.} =
     let r: float = global.ofGetFrameRate()
     let s = fmt"{r:.2f}"
     discard global.ofSetWindowTitle(s)
 
-proc draw(user: pointer) {.cdecl.} =
+proc draw() {.cdecl.} =
     discard global.ofSetColor(red)
     discard global.ofDrawRectangle(
         global.ofGetMouseX() - 50,

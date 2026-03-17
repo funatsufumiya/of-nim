@@ -3,13 +3,13 @@ import ofApp
 # example state
 var frameCount = 0
 
-proc update(user: pointer) {.cdecl.} =
+proc update() {.cdecl.} =
     inc frameCount
 
-proc draw(user: pointer) {.cdecl.} =
+proc draw() {.cdecl.} =
     discard
 
-proc keyPressed(user: pointer, key: cint) {.cdecl.} =
+proc keyPressed(key: cint) {.cdecl.} =
     let ckey = cast[char](key)
     echo "key: ", $ckey, " (", $key, "), frameCount: ", $frameCount
 
