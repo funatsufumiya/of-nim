@@ -55,7 +55,16 @@ $ nim c -r examples/hello.nim
 $ nim c -r examples/cpp_interop.nim
 ```
 
+## How to use ofx addons
+
+- Firstly, create `addons.make` on the top of this repository.
+  
+    ```txt
+    ofxOsc
+    ```
+- Copy ofxXXX folder into `addons/ofxXXX` (such as ofxOsc)
+- Then try `nim c -r examples\osc_test.nim`
+    - You can debug `addon_config.mk` parse log by  `-d:addonsDebug`, such as `nim c -d:addonsDebug -r examples\osc_test.nim`
 ## TODO
 
-- oF addons support
 - project generator
