@@ -3,6 +3,7 @@ import nimline
 
 {.emit: """
 #include "ofMain.h"
+#include "ofxOsc.h"
 """ .}
 
 proc setup() {.cdecl.} =

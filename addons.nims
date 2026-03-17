@@ -19,6 +19,7 @@ proc parseAddonConfigMk(path: string): SectionMap =
   var curSection = "common"
   for raw in lines:
     var line = raw.strip()
+    # echo "line: ", line
     if line.len == 0: continue
     if line.startsWith("#"): continue
     if line.endsWith(":"):
@@ -27,15 +28,29 @@ proc parseAddonConfigMk(path: string): SectionMap =
         sections[curSection] = newJObject()
       continue
     # assignments: VAR = value  or VAR += value
-    var opIndex = line.find("+=")
+    var name = ""
+    var value = ""
     var opAdd = false
-    if opIndex >= 0:
+    if line.contains("+="):
+      let parts = line.split("+=")
+      if parts.len == 0: continue
+      name = parts[0].strip()
+      # echo "name = ", $name
+      if parts.len > 1:
+        value = parts[1 .. parts.len-1].join("+=").strip()
+        # echo "value = ", $value
       opAdd = true
+    elif line.contains("="):
+      let parts = line.split("=")
+      if parts.len == 0: continue
+      name = parts[0].strip()
+      # echo "name = ", $name
+      if parts.len > 1:
+        value = parts[1 .. parts.len-1].join("=").strip()
+        # echo "value = ", $value
+      opAdd = false
     else:
-      opIndex = line.find("=")
-    if opIndex < 0: continue
-    let name = line[0 ..< opIndex].strip()
-    var value = line[(opIndex + (if opAdd: 2 else: 1)) ..^ 0].strip()
+      continue
     if not sections.hasKey(curSection):
       sections[curSection] = newJObject()
     var sect = sections[curSection]
@@ -80,8 +95,8 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
 
   # handle ADDON_INCLUDES
   let includes = pickVars(sections, platformCandidates, "ADDON_INCLUDES")
-  for inc in includes:
-    var p = inc
+  for inp in includes:
+    var p = inp
     if p.endsWith("%"):
       p = p[0 ..< p.len-1]
     if p.len == 0: continue
