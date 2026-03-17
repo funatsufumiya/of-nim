@@ -109,8 +109,16 @@ inline void ofn_runWithCallbacks_withFlag(int w, int h, NimCallbacks* cb, bool f
   ofRunMainLoop();
 }
 
-inline void ofn_runWithCallbacks_withSettings(const ofGLWindowSettings& s_in, NimCallbacks* cb) {
+inline void ofn_runWithCallbacks_withSettings_gl(const ofGLWindowSettings& s_in, NimCallbacks* cb) {
   ofGLWindowSettings s = s_in;
+  auto win = ofCreateWindow(s);
+  std::shared_ptr<NimApp> app = std::make_shared<NimApp>(cb);
+  ofRunApp(win, app);
+  ofRunMainLoop();
+}
+
+inline void ofn_runWithCallbacks_withSettings_glfw(const ofGLFWWindowSettings& s_in, NimCallbacks* cb) {
+  ofGLFWWindowSettings s = s_in;
   auto win = ofCreateWindow(s);
   std::shared_ptr<NimApp> app = std::make_shared<NimApp>(cb);
   ofRunApp(win, app);
@@ -127,8 +135,20 @@ extern "C" {
   inline void ofn_runWithCallbacks_fullscreen_c(int w, int h, void* cb, bool fullscreen) {
     ofn_runWithCallbacks_withFlag(w,h, (NimCallbacks*)cb, fullscreen);
   }
-  inline void ofn_runWithCallbacks_settings_c(void* settingsPtr, void* cb) {
-    ofn_runWithCallbacks_withSettings(*(ofGLWindowSettings*)settingsPtr, (NimCallbacks*)cb);
+  //inline void ofn_runWithCallbacks_settings_gl_c(void* settingsPtr, void* cb) {
+  //  ofn_runWithCallbacks_withSettings_gl(*(ofGLWindowSettings*)settingsPtr, (NimCallbacks*)cb);
+  //}
+  //inline void ofn_runWithCallbacks_settings_glfw_c(void* settingsPtr, void* cb) {
+  //  ofn_runWithCallbacks_withSettings_glfw(*(ofGLFWWindowSettings*)settingsPtr, (NimCallbacks*)cb);
+  //}
+  inline void ofn_runWithCallbacks_settings_auto_c(void* settingsPtr, void* cb) {
+    ofGLWindowSettings* base = (ofGLWindowSettings*)settingsPtr;
+    ofGLFWWindowSettings* glfw = dynamic_cast<ofGLFWWindowSettings*>(base);
+    if (glfw) {
+      ofn_runWithCallbacks_withSettings_glfw(*glfw, (NimCallbacks*)cb);
+    } else {
+      ofn_runWithCallbacks_withSettings_gl(*base, (NimCallbacks*)cb);
+    }
   }
 
   inline void ofn_setSetup_c(void* cb, SetupFn f) { ((NimCallbacks*)cb)->setup = f; }
@@ -152,7 +172,9 @@ extern "C" {
 proc ofn_makeCallbacks_c(): pointer {.importc: "ofn_makeCallbacks_c", cdecl.}
 proc ofn_runWithCallbacks_c(w: cint, h: cint, cb: pointer) {.importc: "ofn_runWithCallbacks_c", cdecl, used.}
 proc ofn_runWithCallbacks_fullscreen_c(w: cint, h: cint, cb: pointer, fullscreen: bool) {.importc: "ofn_runWithCallbacks_fullscreen_c", cdecl.}
-proc ofn_runWithCallbacks_settings_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_c", cdecl.}
+# proc ofn_runWithCallbacks_settings_gl_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_gl_c", cdecl.}
+# proc ofn_runWithCallbacks_settings_glfw_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_glfw_c", cdecl.}
+proc ofn_runWithCallbacks_settings_auto_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_auto_c", cdecl.}
 
 proc ofn_setSetup_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setSetup_c", cdecl.}
 proc ofn_setUpdate_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setUpdate_c", cdecl.}
@@ -250,4 +272,4 @@ proc run*(a: var OfApp; w: int = 800; h: int = 600; fullscreen: bool = false) =
   ofn_runWithCallbacks_fullscreen_c(cast[cint](w), cast[cint](h), a.cb, fullscreen)
 
 proc runWithSettings*(a: var OfApp; settings: pointer) =
-  ofn_runWithCallbacks_settings_c(settings, a.cb)
+  ofn_runWithCallbacks_settings_auto_c(settings, a.cb)
