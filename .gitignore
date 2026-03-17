@@ -1,4 +1,6 @@
 *.exe
+*.pdb
+*.i
 .vscode
 lib/*
 !lib/.gitkeep

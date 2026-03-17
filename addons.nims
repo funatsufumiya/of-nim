@@ -133,8 +133,24 @@ proc pickVars(sections: SectionMap, platformCandidates: seq[string], varname: st
         result.add vals
   return result
 
+proc isPlatformMismatch(path: string): bool =
+  let lp = path.replace('\\', '/').toLowerAscii()
+  when defined(windows):
+    # on Windows, skip posix folders
+    if lp.contains("/posix"):
+      return true
+    return false
+  else:
+    # on non-Windows, skip win32 folders
+    if lp.contains("/win32"):
+      return true
+    return false
+
 proc addInclude(path: string) =
   if path.len == 0: return
+  if isPlatformMismatch(path):
+    logAdd(fmt"skip include (platform mismatch): {path}")
+    return
   logAdd(fmt"passC: -I{path}")
   switch("passC", fmt"-I{path}")
 
@@ -199,6 +215,10 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
       for sf in srcFiles:
         # respect ADDON_SOURCES_EXCLUDE
         if isExcluded(sf, sourcesExcl): continue
+        # skip platform-mismatched source folders (posix/win32)
+        if isPlatformMismatch(sf):
+          logAdd(fmt"skip source (platform mismatch): {sf}")
+          continue
         logAdd(fmt"add source: {sf}")
         # switch("passC", sf)
         # normalize paths (use forward slashes and lowercase for comparison)
@@ -278,6 +298,10 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
           for lsf in libSrcFiles:
             # respect ADDON_SOURCES_EXCLUDE for libs/*/src files
             if isExcluded(lsf, sourcesExcl): continue
+            # skip platform-mismatched lib source folders
+            if isPlatformMismatch(lsf):
+              logAdd(fmt"skip lib source (platform mismatch): {lsf}")
+              continue
             logAdd(fmt"add lib source: {lsf}")
             # switch("passC", lsf)
             var nf = lsf.replace('\\', '/')

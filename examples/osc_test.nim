@@ -7,8 +7,12 @@ import ofx_addons
 #include "ofxOsc.h"
 """ .}
 
+defineCppType(ofxOscSender, "ofxOscSender", "ofxOsc.h")
+var osc_sender: ofxOscSender
+
 proc setup() {.cdecl.} =
     discard
+    # var osc_sender = cppinit(ofxOscSender)
 
 proc update() {.cdecl.} =
     discard
