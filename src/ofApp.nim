@@ -142,11 +142,11 @@ extern "C" {
   //  ofn_runWithCallbacks_withSettings_glfw(*(ofGLFWWindowSettings*)settingsPtr, (NimCallbacks*)cb);
   //}
   inline void ofn_runWithCallbacks_settings_auto_c(void* settingsPtr, void* cb) {
-    ofGLWindowSettings* base = (ofGLWindowSettings*)settingsPtr;
-    ofGLFWWindowSettings* glfw = dynamic_cast<ofGLFWWindowSettings*>(base);
+    ofGLFWWindowSettings* glfw = (ofGLFWWindowSettings*)settingsPtr;
     if (glfw) {
       ofn_runWithCallbacks_withSettings_glfw(*glfw, (NimCallbacks*)cb);
     } else {
+      ofGLWindowSettings* base = (ofGLWindowSettings*)settingsPtr;
       ofn_runWithCallbacks_withSettings_gl(*base, (NimCallbacks*)cb);
     }
   }
