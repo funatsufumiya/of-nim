@@ -8,10 +8,17 @@ import ofx_addons
 """ .}
 
 defineCppType(ofxOscSender, "ofxOscSender", "ofxOsc.h")
+defineCppType(ofxOscMessage, "ofxOscMessage", "ofxOsc.h")
+
 var osc_sender: ofxOscSender
+var osc_msg: ofxOscMessage
 
 proc setup() {.cdecl.} =
-    discard
+    # discard
+    discard osc_sender.setup("127.0.0.1", 12345)
+    discard osc_msg.setAddress("/test")
+    discard osc_sender.sendMessage(osc_msg)
+    discard osc_msg.clear()
     # var osc_sender = cppinit(ofxOscSender)
 
 proc update() {.cdecl.} =
