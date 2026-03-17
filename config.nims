@@ -25,12 +25,15 @@ when defined(windows):
   switch("cc", "vcc")
   # switch("cc", "clang_cl")
   switch("passC", "/std:c++17")
+  # force use of std::filesystem in headers (prevent boost/std mismatch)
+  switch("passC", "/DOF_USING_STD_FS=1")
   switch("passC", "/utf-8")
   switch("passC", "/MD")
   switch("passC", "/DWIN32_LEAN_AND_MEAN")
   switch("passC", "/DNOMINMAX")
 else:
   switch("passC", "-std=c++17")
+  switch("passC", "-DOF_USING_STD_FS=1")
 
 switch("path", "src")
 switch("passC", "-Iglew")

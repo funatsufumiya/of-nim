@@ -277,6 +277,10 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
     # also add include/src folders from libs/* (respect ADDON_INCLUDES_EXCLUDE)
     for kind2, p2 in walkDir(libsDir):
       if kind2 == pcDir:
+        # add the lib directory itself (respect ADDON_INCLUDES_EXCLUDE / ADDON_SOURCES_EXCLUDE)
+        if dirExists(p2):
+          if not isExcluded(p2, includesExcl) and not isExcluded(p2, sourcesExcl):
+            addInclude(p2)
         let incd = joinPath(p2, "include")
         if dirExists(incd):
           if not isExcluded(incd, includesExcl) and not isExcluded(incd, sourcesExcl):
@@ -315,6 +319,26 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
                 lrel = lrel.substr(1)
             if lrel notin discoveredCppSources:
               discoveredCppSources.add(lrel)
+          # also scan the whole lib directory (not only libs/*/src) for other source files
+          let libAllFiles = findSourceFiles(p2)
+          logAdd(fmt"found {libAllFiles.len} lib source files in {p2}")
+          for af in libAllFiles:
+            if isExcluded(af, sourcesExcl): continue
+            if isPlatformMismatch(af):
+              logAdd(fmt"skip lib source (platform mismatch): {af}")
+              continue
+            logAdd(fmt"add lib source: {af}")
+            var anf = af.replace('\\', '/')
+            var proj = projectRoot.replace('\\', '/')
+            var nfn = anf.toLowerAscii()
+            var projn = proj.toLowerAscii()
+            var arel = anf
+            if nfn.startsWith(projn):
+              arel = anf.substr(proj.len)
+              if arel.startsWith("/"):
+                arel = arel.substr(1)
+            if arel notin discoveredCppSources:
+              discoveredCppSources.add(arel)
 
 proc processAddons*(addonsMakePath: string, addonsDir: string, projectRoot: string) =
   if not fileExists(addonsMakePath):
