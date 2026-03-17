@@ -34,6 +34,7 @@ else:
 
 switch("path", "src")
 switch("passC", "-Iglew")
+switch("passC", "-Iglfw")
 switch("passC", "-Icairo")
 switch("passC", "-Iinclude")
 switch("passC", "-Iinclude/utils")
