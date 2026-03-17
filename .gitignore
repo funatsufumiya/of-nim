@@ -7,3 +7,5 @@ lib/*
 addons/*
 !addons/.gitkeep
 addons.make
+generated/*
+!generated/.gitkeep
