@@ -30,6 +30,8 @@ when isMainModule:
     app.run(800, 600)
 ```
 
+![docs/screenshot.png](docs/screenshot.png)
+
 ## Pre-requisites
 
 ### Windows
