@@ -20,6 +20,28 @@ proc splitWords(s: string): seq[string] =
 
 type SectionMap = JsonNode
 
+proc walkDirRec(root: string): seq[string] =
+  result = @[]
+  if not dirExists(root): return result
+  for kind, p in walkDir(root):
+    if kind == pcDir:
+      result.add(p)
+      let subs = walkDirRec(p)
+      for sp in subs: result.add(sp)
+
+proc findSourceFiles(root: string): seq[string] =
+  result = @[]
+  if not dirExists(root): return result
+  var dirs = @[root]
+  for d in walkDirRec(root):
+    dirs.add(d)
+  for d in dirs:
+    for kind, p in walkDir(d):
+      if kind == pcFile:
+        let lower = p.toLowerAscii()
+        if lower.endsWith(".cpp") or lower.endsWith(".c") or lower.endsWith(".cc") or lower.endsWith(".cxx") or lower.endsWith(".mm") or lower.endsWith(".m"):
+          result.add(p)
+
 proc parseAddonConfigMk(path: string): SectionMap =
   var sections = newJObject()
   if not fileExists(path):
@@ -90,11 +112,12 @@ proc pickVars(sections: SectionMap, platformCandidates: seq[string], varname: st
 
 proc addInclude(path: string) =
   if path.len == 0: return
-  logAdd(fmt"ADD INCLUDE: {path}")
+  logAdd(fmt"passC: -I{path}")
   switch("passC", fmt"-I{path}")
 
 proc addLink(path: string) =
   if path.len == 0: return
+  logAdd(fmt"passL: {path}")
   switch("passL", path)
 
 proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: seq[string]) =
@@ -111,19 +134,26 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
       p = p[0 ..< p.len-1]
     if p.len == 0: continue
     let full = joinPath(addonDir, p)
+    # logAdd(fmt"explicit include entry: {inp} -> full: {full}")
     if dirExists(full):
       addInclude(full)
 
   # default include directories
   # handle default include directories; for `src` add recursively (respecting simple excludes)
   let includesExcl = pickVars(sections, platformCandidates, "ADDON_INCLUDES_EXCLUDE")
+  for ex in includesExcl:
+    # logAdd(fmt"includesExcl: {ex}")
+    discard
+
   proc isExcluded(p: string, excludes: seq[string]): bool =
+    if excludes.len == 0: return false
+    var np = p.replace('\\', '/').toLowerAscii()
     for ex in excludes:
-      var base = ex
+      var base = ex.replace('\\', '/').toLowerAscii()
       if base.endsWith("%"):
         base = base[0 ..< base.len-1]
       if base.len == 0: continue
-      if p.contains(base): return true
+      if np.contains(base): return true
     return false
 
   for candidate in @["include", "src"]:
@@ -132,22 +162,41 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
     if candidate == "src":
       # add top-level src folder
       if not isExcluded(d, includesExcl): addInclude(d)
-      # add subdirectories recursively
-      for kind, p in walkDir(d):
-        if kind == pcDir:
-          if not isExcluded(p, includesExcl): addInclude(p)
+      # compute subdirectories once, log count, then iterate
+      let subdirs = walkDirRec(d)
+      # logAdd(fmt"walkDirRec({d}) -> {subdirs.len} dirs")
+      for p in subdirs:
+        if dirExists(p):
+          # logAdd(fmt"consider dir: {p}, excluded={isExcluded(p, includesExcl)}")
+          if not isExcluded(p, includesExcl):
+            addInclude(p)
+      # discover cpp/c sources under src and pass to C compiler
+      let srcFiles = findSourceFiles(d)
+      logAdd(fmt"found {srcFiles.len} source files in {d}")
+      for sf in srcFiles:
+        logAdd(fmt"passL source: {sf}")
+        switch("passL", sf)
     else:
       if not isExcluded(d, includesExcl): addInclude(d)
 
   # handle ADDON_CFLAGS and ADDON_DEFINES
   let cflags = pickVars(sections, platformCandidates, "ADDON_CFLAGS")
-  for f in cflags: switch("passC", f)
+  for f in cflags:
+    logAdd(fmt"passC flag: {f}")
+    switch("passC", f)
   let defines = pickVars(sections, platformCandidates, "ADDON_DEFINES")
-  for d in defines: switch("passC", d)
+  for d in defines:
+    var pd = d
+    if pd.len > 0 and not (pd[0] == '-' or pd[0] == '/'): 
+      pd = fmt"-D{pd}"
+    logAdd(fmt"passC define: {pd}")
+    switch("passC", pd)
 
   # handle ADDON_LDFLAGS
   let ldflags = pickVars(sections, platformCandidates, "ADDON_LDFLAGS")
-  for f in ldflags: switch("passL", f)
+  for f in ldflags:
+    logAdd(fmt"passL ldflag: {f}")
+    switch("passL", f)
 
   # handle ADDON_LIBS explicit lists
   let libs = pickVars(sections, platformCandidates, "ADDON_LIBS")
@@ -168,6 +217,29 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
         let lower = p.toLowerAscii()
         if lower.endsWith(".lib") or lower.endsWith(".a") or lower.endsWith(".dll") or lower.endsWith(".so") or lower.endsWith(".dylib"):
           addLink(p)
+    # also add include/src folders from libs/*
+    for kind2, p2 in walkDir(libsDir):
+      if kind2 == pcDir:
+        let incd = joinPath(p2, "include")
+        if dirExists(incd):
+          # logAdd(fmt"found libs include: {incd}")
+          addInclude(incd)
+        let srcd = joinPath(p2, "src")
+        if dirExists(srcd):
+          # logAdd(fmt"found libs src: {srcd}")
+          addInclude(srcd)
+          let subdirs = walkDirRec(srcd)
+          # logAdd(fmt"walkDirRec({srcd}) -> {subdirs.len} dirs")
+          for sp in subdirs:
+            if dirExists(sp):
+              # logAdd(fmt"consider libs subdir: {sp}")
+              addInclude(sp)
+          # also find source files in libs/*/src and pass to compiler
+          let libSrcFiles = findSourceFiles(srcd)
+          logAdd(fmt"found {libSrcFiles.len} lib source files in {srcd}")
+          for lsf in libSrcFiles:
+            logAdd(fmt"passL lib source: {lsf}")
+            switch("passL", lsf)
 
 proc processAddons*(addonsMakePath: string, addonsDir: string, projectRoot: string) =
   if not fileExists(addonsMakePath):
