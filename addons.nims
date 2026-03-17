@@ -3,6 +3,15 @@ import std/strutils
 import std/json
 import std/strformat
 
+when defined(addonsDebug):
+  const debugAddons = true
+else:
+  const debugAddons = false
+
+proc logAdd(s: string) =
+  if debugAddons:
+    echo s
+
 proc splitWords(s: string): seq[string] =
   result = @[]
   for part in s.splitWhitespace():
@@ -81,6 +90,7 @@ proc pickVars(sections: SectionMap, platformCandidates: seq[string], varname: st
 
 proc addInclude(path: string) =
   if path.len == 0: return
+  logAdd(fmt"ADD INCLUDE: {path}")
   switch("passC", fmt"-I{path}")
 
 proc addLink(path: string) =
@@ -105,9 +115,29 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
       addInclude(full)
 
   # default include directories
+  # handle default include directories; for `src` add recursively (respecting simple excludes)
+  let includesExcl = pickVars(sections, platformCandidates, "ADDON_INCLUDES_EXCLUDE")
+  proc isExcluded(p: string, excludes: seq[string]): bool =
+    for ex in excludes:
+      var base = ex
+      if base.endsWith("%"):
+        base = base[0 ..< base.len-1]
+      if base.len == 0: continue
+      if p.contains(base): return true
+    return false
+
   for candidate in @["include", "src"]:
     let d = joinPath(addonDir, candidate)
-    if dirExists(d): addInclude(d)
+    if not dirExists(d): continue
+    if candidate == "src":
+      # add top-level src folder
+      if not isExcluded(d, includesExcl): addInclude(d)
+      # add subdirectories recursively
+      for kind, p in walkDir(d):
+        if kind == pcDir:
+          if not isExcluded(p, includesExcl): addInclude(p)
+    else:
+      if not isExcluded(d, includesExcl): addInclude(d)
 
   # handle ADDON_CFLAGS and ADDON_DEFINES
   let cflags = pickVars(sections, platformCandidates, "ADDON_CFLAGS")
