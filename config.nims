@@ -90,23 +90,6 @@ when defined(windows):
   switch("passL", "Crypt32.lib")
 
 elif defined(macosx):
-  # --- openFrameworks.a reconstruct ---
-  const
-    target = "lib/osx/openFrameworks.a"
-    parts = ["lib/osx/openFrameworks.a.partaa", "lib/osx/openFrameworks.a.partab", "lib/osx/openFrameworks.a.partac"]
-  if not fileExists(target):
-    var presentParts: seq[string] = @[]
-    for p in parts:
-      if fileExists(p):
-        presentParts.add(p)
-    if presentParts.len == parts.len:
-      echo "Reconstructing ", target, " from parts..."
-      let cmd = "cat " & presentParts.join(" ") & " > " & target
-      try:
-        exec(cmd)
-      except OSError:
-        quit("Failed to reconstruct " & target)
-        
   switch("passL", "lib/osx/openframeworks.a")
   switch("passL", "lib/osx/glfw3.a")
   switch("passL", "lib/osx/tess2.a")
@@ -115,7 +98,6 @@ elif defined(macosx):
   switch("passL", "lib/osx/uriparser.a")
   switch("passL", "lib/osx/freeimage.a")
   switch("passL", "lib/osx/freetype.a")
-  # switch("passL", "lib/osx/libz.a")
   switch("passL", "lib/osx/libfmod.dylib")
   switch("passL", "-framework OpenGL")
   switch("passL", "-framework CoreFoundation")
