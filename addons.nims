@@ -361,11 +361,11 @@ proc processAddons*(addonsMakePath: string, addonsDir: string, projectRoot: stri
       var parts = name.split(sep)
       if parts.len == 1: # maybe the other separator is used
         parts = name.split(altSep)
-      if parts.len > 0: name = parts[^1]
+      if parts.len > 0: name = parts[parts.len-1]
     # fallback: take last path component using platform separators
     if name.contains(sep) or name.contains(altSep):
       var parts2 = if name.contains(sep): name.split(sep) else: name.split(altSep)
-      if parts2.len > 0: name = parts2[^1]
+      if parts2.len > 0: name = parts2[parts2.len-1]
     if name.len == 0: continue
     names.add(name)
 
@@ -398,3 +398,18 @@ proc processAddons*(addonsMakePath: string, addonsDir: string, projectRoot: stri
       contents.add(fmt"{cps} {dq}{s}{dq}{rp}")
     writeFile(outPath, contents)
     logAdd(fmt"wrote generated file: {outPath}")
+
+## Choose a .nim.addons file for the given Nim target (if any).
+proc selectAddonsFile*(projectRoot: string, mainNimRelPath: string): string =
+  if mainNimRelPath.len == 0: return ""
+  let candidate = mainNimRelPath & ".addons"
+  if fileExists(candidate): return candidate
+  if not isAbsolute(mainNimRelPath):
+    let relativeCandidate = joinPath(projectRoot, candidate)
+    if fileExists(relativeCandidate): return relativeCandidate
+  # if caller provided a path (or basename), extract basename safely
+  let (_, base) = splitPath(mainNimRelPath)
+  if base.endsWith(".nim"):
+    let baseCandidate = joinPath(projectRoot, base & ".addons")
+    if fileExists(baseCandidate): return baseCandidate
+  return ""

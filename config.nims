@@ -6,6 +6,17 @@ from std/sequtils import toSeq
 
 let projectRoot = parentDir(system.currentSourcePath)
 
+var detectedMainNim = ""
+var i = paramCount()
+while i >= 1:
+  let p = paramStr(i)
+  if p.len > 0 and p[0] != '-' and p.toLowerAscii().endsWith(".nim"):
+    detectedMainNim = p
+    break
+  i = i - 1
+
+let mainNimRelPath = detectedMainNim
+
 # Ensure required library folders exist; if missing, instruct user to run installer scripts.
 proc requireDirs(dirs: seq[string], hintCmd: string) =
   for d in dirs:
@@ -22,8 +33,8 @@ elif defined(macosx):
 switch("backend", "cpp")
 
 when defined(windows):
-  switch("cc", "vcc")
-  # switch("cc", "clang_cl")
+  # switch("cc", "vcc")
+  switch("cc", "clang_cl")
   switch("passC", "/std:c++17")
   # force use of std::filesystem in headers (prevent boost/std mismatch)
   switch("passC", "/DOF_USING_STD_FS=1")
@@ -53,18 +64,14 @@ switch("passC", "-Iinclude/sound")
 switch("passC", "-Iinclude/video")
 switch("passC", "-Iutils")
 
-# Load addon parsing logic from a separate nimscript. The parser will only run
-# when an `addons.make` file is present in the project; if you keep your
-# openFrameworks addons in a different location, set the environment
-# variable `OF_ADDONS_PATH` to that addons folder before running.
 include "addons.nims"
 
-# try project-local addons.make first
-let projectAddonsMake = joinPath(projectRoot, "addons.make")
-if fileExists(projectAddonsMake):
+# load xxx.nim.addons
+let preferredAddons = selectAddonsFile(projectRoot, mainNimRelPath)
+if preferredAddons.len > 0:
   let localAddonsDir = joinPath(projectRoot, "addons")
   if dirExists(localAddonsDir):
-    processAddons(projectAddonsMake, localAddonsDir, projectRoot)
+    processAddons(preferredAddons, localAddonsDir, projectRoot)
 
 # const ofLibPath =
 when defined(windows):
