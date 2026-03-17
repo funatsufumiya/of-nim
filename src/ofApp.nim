@@ -1,4 +1,5 @@
 type
+  SetupFn* = proc(){.cdecl.}
   UpdateFn* = proc(){.cdecl.}
   DrawFn*   = proc(){.cdecl.}
   KeyPressedFn*    = proc(key: cint){.cdecl.}
@@ -15,6 +16,7 @@ type
 #include <memory>
 #include "ofMain.h"
 
+using SetupFn = void(*)();
 using UpdateFn = void(*)();
 using DrawFn   = void(*)();
 using KeyPressedFn    = void(*)(int);
@@ -28,6 +30,7 @@ using MessageFn = void(*)(void*);
 using ExitFn = void(*)();
 
 struct NimCallbacks {
+  SetupFn setup;
   UpdateFn update;
   DrawFn draw;
   KeyPressedFn keyPressed;
@@ -46,6 +49,7 @@ struct NimCallbacks {
 
 inline NimCallbacks* ofn_makeCallbacks() {
   NimCallbacks* p = new NimCallbacks();
+  p->setup = nullptr;
   p->update = nullptr;
   p->draw = nullptr;
   p->keyPressed = nullptr;
@@ -67,7 +71,7 @@ class NimApp : public ofBaseApp {
   NimCallbacks* cb;
 public:
   NimApp(NimCallbacks* c): cb(c) {}
-  void setup() override { if(cb && cb->update) cb->update(); }
+  void setup() override { if(cb && cb->setup) cb->setup(); }
   void update() override { if(cb && cb->update) cb->update(); }
   void draw() override   { if(cb && cb->draw)   cb->draw();  }
   void keyPressed(int k) override { if(cb && cb->keyPressed) cb->keyPressed(k); }
@@ -127,6 +131,7 @@ extern "C" {
     ofn_runWithCallbacks_withSettings(*(ofGLWindowSettings*)settingsPtr, (NimCallbacks*)cb);
   }
 
+  inline void ofn_setSetup_c(void* cb, SetupFn f) { ((NimCallbacks*)cb)->setup = f; }
   inline void ofn_setUpdate_c(void* cb, UpdateFn f) { ((NimCallbacks*)cb)->update = f; }
   inline void ofn_setDraw_c(void* cb, DrawFn f) { ((NimCallbacks*)cb)->draw = f; }
   inline void ofn_setKeyPressed_c(void* cb, KeyPressedFn f) { ((NimCallbacks*)cb)->keyPressed = f; }
@@ -149,6 +154,7 @@ proc ofn_runWithCallbacks_c(w: cint, h: cint, cb: pointer) {.importc: "ofn_runWi
 proc ofn_runWithCallbacks_fullscreen_c(w: cint, h: cint, cb: pointer, fullscreen: bool) {.importc: "ofn_runWithCallbacks_fullscreen_c", cdecl.}
 proc ofn_runWithCallbacks_settings_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_c", cdecl.}
 
+proc ofn_setSetup_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setSetup_c", cdecl.}
 proc ofn_setUpdate_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setUpdate_c", cdecl.}
 proc ofn_setDraw_c(cb: pointer, f: DrawFn) {.importc: "ofn_setDraw_c", cdecl.}
 proc ofn_setKeyPressed_c(cb: pointer, f: KeyPressedFn) {.importc: "ofn_setKeyPressed_c", cdecl.}
@@ -168,6 +174,7 @@ type OfApp* = object
   cb*: pointer
 
 type OfAppConfig* = object
+  setup*: SetupFn
   update*: UpdateFn
   draw*: DrawFn
   keyPressed*: KeyPressedFn
@@ -184,6 +191,7 @@ type OfAppConfig* = object
   exit*: ExitFn
 
 proc makeOfApp*(
+  setup: SetupFn = nil;
   update: UpdateFn = nil;
   draw: DrawFn = nil;
   keyPressed: KeyPressedFn = nil;
@@ -202,6 +210,7 @@ proc makeOfApp*(
   
   var a: OfApp
   a.cb = ofn_makeCallbacks_c()
+  if setup != nil: ofn_setSetup_c(a.cb, setup)
   if update != nil: ofn_setUpdate_c(a.cb, update)
   if draw != nil: ofn_setDraw_c(a.cb, draw)
   if keyPressed != nil: ofn_setKeyPressed_c(a.cb, keyPressed)
@@ -220,6 +229,7 @@ proc makeOfApp*(
 
 proc makeOfApp*(cfg: OfAppConfig): OfApp =
   return makeOfApp(
+    setup = cfg.setup,
     update = cfg.update,
     draw = cfg.draw,
     keyPressed = cfg.keyPressed,

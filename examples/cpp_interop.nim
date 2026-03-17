@@ -8,6 +8,9 @@ import nimline
 
 proc red {.importcpp: "ofColor::red" .}
 
+proc setup() {.cdecl.} =
+    discard global.ofSetFrameRate(60)
+
 proc update() {.cdecl.} =
     let r: float = global.ofGetFrameRate()
     let s = fmt"{r:.2f}"
@@ -21,5 +24,5 @@ proc draw() {.cdecl.} =
         100, 100)
 
 when isMainModule:
-    var app = makeOfApp(update=update, draw=draw)
+    var app = makeOfApp(setup=setup, update=update, draw=draw)
     app.run(800, 600)
