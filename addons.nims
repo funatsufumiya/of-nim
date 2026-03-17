@@ -68,49 +68,70 @@ proc parseAddonConfigMk(path: string): SectionMap =
       let parts = line.split("+=")
       if parts.len == 0: continue
       name = parts[0].strip()
-      # echo "name = ", $name
       if parts.len > 1:
         value = parts[1 .. parts.len-1].join("+=").strip()
-        # echo "value = ", $value
       opAdd = true
     elif line.contains("="):
       let parts = line.split("=")
       if parts.len == 0: continue
       name = parts[0].strip()
-      # echo "name = ", $name
       if parts.len > 1:
         value = parts[1 .. parts.len-1].join("=").strip()
-        # echo "value = ", $value
       opAdd = false
     else:
       continue
     if not sections.hasKey(curSection):
       sections[curSection] = newJObject()
     var sect = sections[curSection]
+    # store each variable as an object { vals: [...], op: "set"|"add" }
     if not sect.hasKey(name) or not opAdd:
-      sect[name] = newJArray()
+      sect[name] = newJObject()
+      sect[name]["vals"] = newJArray()
+      sect[name]["op"] = %* (if opAdd: "add" else: "set")
+    else:
+      # update op to reflect last operation (+= or =)
+      sect[name]["op"] = %* (if opAdd: "add" else: "set")
     for w in splitWords(value):
-      # append w to array
-      sect[name].add(%* w)
+      sect[name]["vals"].add(%* w)
   return sections
 
 proc pickVars(sections: SectionMap, platformCandidates: seq[string], varname: string): seq[string] =
-  var outs: seq[string] = @[]
-  if sections.kind == JNull: return outs
-  if sections.hasKey("common"):
-    let common = sections["common"]
-    if common.kind != JNull and common.hasKey(varname):
-      let arr = common[varname]
-      if arr.kind == JArray:
-        for i in 0 ..< arr.len: outs.add(arr[i].getStr())
+  var result: seq[string] = @[]
+  if sections.kind == JNull: return result
+
+  # helper to extract values from node (support backward compatibility)
+  proc nodeVals(n: JsonNode): seq[string] =
+    var r: seq[string] = @[]
+    if n.kind == JArray:
+      for i in 0..<n.len: r.add(n[i].getStr())
+    elif n.kind == JObject and n.hasKey("vals"):
+      let arr = n["vals"]
+      for i in 0..<arr.len: r.add(arr[i].getStr())
+    return r
+
+  # start with common if present
+  if sections.hasKey("common") and sections["common"].hasKey(varname):
+    result = nodeVals(sections["common"][varname])
+
+  # respect platformCandidates provided by caller (filter out msys2)
+  var filtered = newSeq[string]()
   for p in platformCandidates:
-    if sections.hasKey(p):
-      let pm = sections[p]
-      if pm.kind != JNull and pm.hasKey(varname):
-        let arr = pm[varname]
-        if arr.kind == JArray:
-          for i in 0 ..< arr.len: outs.add(arr[i].getStr())
-  return outs
+    if p.toLowerAscii() != "msys2":
+      filtered.add(p)
+
+  # process platform sections in order; treat op=="set" as override, "add" as append
+  for p in filtered:
+    if sections.hasKey(p) and sections[p].hasKey(varname):
+      let node = sections[p][varname]
+      var op = "set"
+      if node.kind == JObject and node.hasKey("op"):
+        op = node["op"].getStr()
+      let vals = nodeVals(node)
+      if op == "set":
+        result = vals
+      else:
+        result.add vals
+  return result
 
 proc addInclude(path: string) =
   if path.len == 0: return
