@@ -14,5 +14,5 @@ proc nimKey(user: pointer, key: cint) {.cdecl.} =
     echo "key: ", $ckey, " (", $key, "), frameCount: ", $frameCount
 
 when isMainModule:
-    var app = makeOfApp(update=nimUpdate, draw=nimDraw, key=nimKey, user=nil)
+    var app = makeOfApp(update=nimUpdate, draw=nimDraw, key=nimKey)
     app.run(800, 600)

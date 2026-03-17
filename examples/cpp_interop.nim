@@ -6,10 +6,7 @@ import nimline
 #include "ofMain.h"
 """ .}
 
-var frameCount = 0
-
 proc nimUpdate(user: pointer) {.cdecl.} =
-    inc frameCount
     let r: float = global.ofGetFrameRate()
     let s = fmt"{r:.2f}"
     discard global.ofSetWindowTitle(s)
@@ -23,10 +20,6 @@ proc nimDraw(user: pointer) {.cdecl.} =
         global.ofGetMouseY() - 50,
         100, 100)
 
-proc nimKey(user: pointer, key: cint) {.cdecl.} =
-    let ckey = cast[char](key)
-    echo "key: ", $ckey, " (", $key, "), frameCount: ", $frameCount
-
 when isMainModule:
-    var app = makeOfApp(update=nimUpdate, draw=nimDraw, key=nimKey, user=nil)
+    var app = makeOfApp(update=nimUpdate, draw=nimDraw)
     app.run(800, 600)
