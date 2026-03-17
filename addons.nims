@@ -35,15 +35,14 @@ var discoveredCppSources: seq[string] = @[]
 proc findSourceFiles(root: string): seq[string] =
   result = @[]
   if not dirExists(root): return result
-  var dirs = @[root]
-  for d in walkDirRec(root):
-    dirs.add(d)
-  for d in dirs:
-    for kind, p in walkDir(d):
-      if kind == pcFile:
-        let lower = p.toLowerAscii()
-        if lower.endsWith(".cpp") or lower.endsWith(".c") or lower.endsWith(".cc") or lower.endsWith(".cxx") or lower.endsWith(".mm") or lower.endsWith(".m"):
-          result.add(p)
+  for kind, p in walkDir(root):
+    if kind == pcFile:
+      let lower = p.toLowerAscii()
+      if lower.endsWith(".cpp") or lower.endsWith(".c") or lower.endsWith(".cc") or lower.endsWith(".cxx") or lower.endsWith(".mm") or lower.endsWith(".m"):
+        result.add(p)
+    elif kind == pcDir:
+      let subs = findSourceFiles(p)
+      for s in subs: result.add(s)
 
 proc parseAddonConfigMk(path: string): SectionMap =
   var sections = newJObject()
@@ -144,6 +143,7 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
   # default include directories
   # handle default include directories; for `src` add recursively (respecting simple excludes)
   let includesExcl = pickVars(sections, platformCandidates, "ADDON_INCLUDES_EXCLUDE")
+  let sourcesExcl = pickVars(sections, platformCandidates, "ADDON_SOURCES_EXCLUDE")
   for ex in includesExcl:
     # logAdd(fmt"includesExcl: {ex}")
     discard
@@ -163,26 +163,33 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
     let d = joinPath(addonDir, candidate)
     if not dirExists(d): continue
     if candidate == "src":
-      # add top-level src folder
-      if not isExcluded(d, includesExcl): addInclude(d)
+      # add top-level src folder (respect both includes and sources exclude)
+      if not isExcluded(d, includesExcl) and not isExcluded(d, sourcesExcl):
+        addInclude(d)
       # compute subdirectories once, log count, then iterate
       let subdirs = walkDirRec(d)
-      # logAdd(fmt"walkDirRec({d}) -> {subdirs.len} dirs")
       for p in subdirs:
         if dirExists(p):
-          # logAdd(fmt"consider dir: {p}, excluded={isExcluded(p, includesExcl)}")
-          if not isExcluded(p, includesExcl):
+          if not isExcluded(p, includesExcl) and not isExcluded(p, sourcesExcl):
             addInclude(p)
       # discover cpp/c sources under src and pass to C compiler
       let srcFiles = findSourceFiles(d)
       # logAdd(fmt"found {srcFiles.len} source files in {d}")
       for sf in srcFiles:
+        # respect ADDON_SOURCES_EXCLUDE
+        if isExcluded(sf, sourcesExcl): continue
         logAdd(fmt"add source: {sf}")
         # switch("passC", sf)
-        var rel = sf
-        if rel.startsWith(projectRoot):
-          rel = rel.substr(projectRoot.len + 1)
-        rel = rel.replace('\\', '/')
+        # normalize paths (use forward slashes and lowercase for comparison)
+        var nf = sf.replace('\\', '/')
+        var proj = projectRoot.replace('\\', '/')
+        var nfn = nf.toLowerAscii()
+        var projn = proj.toLowerAscii()
+        var rel = nf
+        if nfn.startsWith(projn):
+          rel = nf.substr(proj.len)
+          if rel.startsWith("/"):
+            rel = rel.substr(1)
         if rel notin discoveredCppSources:
           discoveredCppSources.add(rel)
     else:
@@ -226,33 +233,41 @@ proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: 
         let lower = p.toLowerAscii()
         if lower.endsWith(".lib") or lower.endsWith(".a") or lower.endsWith(".dll") or lower.endsWith(".so") or lower.endsWith(".dylib"):
           addLink(p)
-    # also add include/src folders from libs/*
+    # also add include/src folders from libs/* (respect ADDON_INCLUDES_EXCLUDE)
     for kind2, p2 in walkDir(libsDir):
       if kind2 == pcDir:
         let incd = joinPath(p2, "include")
         if dirExists(incd):
-          # logAdd(fmt"found libs include: {incd}")
-          addInclude(incd)
+          if not isExcluded(incd, includesExcl) and not isExcluded(incd, sourcesExcl):
+            addInclude(incd)
         let srcd = joinPath(p2, "src")
         if dirExists(srcd):
-          # logAdd(fmt"found libs src: {srcd}")
-          addInclude(srcd)
-          let subdirs = walkDirRec(srcd)
-          # logAdd(fmt"walkDirRec({srcd}) -> {subdirs.len} dirs")
-          for sp in subdirs:
-            if dirExists(sp):
-              # logAdd(fmt"consider libs subdir: {sp}")
-              addInclude(sp)
+          if not isExcluded(srcd, includesExcl) and not isExcluded(srcd, sourcesExcl):
+            addInclude(srcd)
+            let subdirs = walkDirRec(srcd)
+            for sp in subdirs:
+              if dirExists(sp):
+                if not isExcluded(sp, includesExcl) and not isExcluded(sp, sourcesExcl):
+                  addInclude(sp)
           # also find source files in libs/*/src and pass to compiler
           let libSrcFiles = findSourceFiles(srcd)
-          # logAdd(fmt"found {libSrcFiles.len} lib source files in {srcd}")
+          # debug: log libs src dir and number of found source files
+          logAdd(fmt"found {libSrcFiles.len} lib source files in {srcd}")
+          logAdd(fmt"libs src dir: {srcd}")
           for lsf in libSrcFiles:
+            # respect ADDON_SOURCES_EXCLUDE for libs/*/src files
+            if isExcluded(lsf, sourcesExcl): continue
             logAdd(fmt"add lib source: {lsf}")
             # switch("passC", lsf)
-            var lrel = lsf
-            if lrel.startsWith(projectRoot):
-              lrel = lrel.substr(projectRoot.len + 1)
-            lrel = lrel.replace('\\', '/')
+            var nf = lsf.replace('\\', '/')
+            var proj = projectRoot.replace('\\', '/')
+            var nfn = nf.toLowerAscii()
+            var projn = proj.toLowerAscii()
+            var lrel = nf
+            if nfn.startsWith(projn):
+              lrel = nf.substr(proj.len)
+              if lrel.startsWith("/"):
+                lrel = lrel.substr(1)
             if lrel notin discoveredCppSources:
               discoveredCppSources.add(lrel)
 
