@@ -2,8 +2,6 @@
 
 openFrameworks v0.12.0, nim 2.2.8
 
-WORK-IN-PROGRESS, but works
-
 ## Pre-requisites
 
 ### Windows
@@ -26,6 +24,5 @@ $ nim c -r examples/hello.nim
 
 ## TODO
 
-- oF proc bindings
 - oF addons support
 - project generator
