@@ -22,8 +22,8 @@ elif defined(macosx):
 switch("backend", "cpp")
 
 when defined(windows):
-  switch("cc", "vcc")
-  # switch("cc", "clang_cl")
+  # switch("cc", "vcc")
+  switch("cc", "clang_cl")
   switch("passC", "/std:c++17")
   switch("passC", "/utf-8")
   switch("passC", "/MD")

@@ -7,21 +7,15 @@ class ofBuffer;
 #if defined( TARGET_OSX ) || defined( TARGET_LINUX ) || defined (TARGET_ANDROID)
 	#include <termios.h>
 #else
-	#include <winbase.h>
-	#include <tchar.h>
-	#include <iostream>
-	#include <string.h>
-	#include <devpropdef.h>
-	#include <setupapi.h>
-	#include <regstr.h>
+	// Avoid including Windows SDK headers in this public header to prevent
+	// legacy macros (near/NEAR) leaking into other translation units.
+	// Implementation files should include the real Windows headers and adapt
+	// to the concrete types there.
+	struct _COMMTIMEOUTS; // forward-declare Windows struct tag; use pointer in header
+	using SerialHandle = void*; // opaque HANDLE substitute
 	/// \cond INTERNAL
 	#define MAX_SERIAL_PORTS 256
 	/// \endcond
-	#include <winioctl.h>
-	/*#ifndef _MSC_VER
-		#define INITGUID
-		#include <initguid.h> // needed for dev-c++ & DEFINE_GUID
-	#endif*/
 #endif
 
 // serial error codes
@@ -354,7 +348,7 @@ protected:
 	/// \see ofSerial::buildDeviceList()
 	void enumerateWin32Ports();
 
-	COMMTIMEOUTS oldTimeout;
+	_COMMTIMEOUTS* oldTimeout;
 		///\< \brief The old serial connection timeout.
 		/// This is needed to restore settings on Microsoft Windows
 		/// platforms upon closing the serial connection.
@@ -369,7 +363,7 @@ protected:
 		/// a particular serial port. The length of the array is limited
 		/// to MAX_SERIAL_PORTS.
 		///\see ofSerial::portNamesShort
-	HANDLE hComm; ///\< This is the handler for the serial port on Microsoft Windows.
+	SerialHandle hComm; ///\< Opaque handle for serial port on Microsoft Windows.
 	int nPorts;  ///\< \brief Number of serial devices (ports) on Microsoft Windows.
 	bool bPortsEnumerated;  ///\< \brief Indicate that all serial ports (on Microsoft Windows) have been enumerated.
 

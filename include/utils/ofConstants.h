@@ -138,6 +138,7 @@ enum ofTargetPlatform{
 #ifdef TARGET_WIN32
 	#define GLEW_STATIC
 	#define GLEW_NO_GLU
+	#include "compat/windows_compat.h"
 	#include "GL/glew.h"
 	#include "GL/wglew.h"
 	#define __WINDOWS_DS__
