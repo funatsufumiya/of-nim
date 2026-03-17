@@ -1,5 +1,6 @@
 import ofApp
 import nimline
+import ofx_addons
 
 {.emit: """
 #include "ofMain.h"
