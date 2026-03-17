@@ -57,7 +57,7 @@ $ nim c -r examples/cpp_interop.nim
 
 ## How to use ofx addons
 
-- Firstly, create `xxx.nim.addons` at side of the nim file.
+- At first, create `xxx.nim.addons` at side of the nim file.
     ```txt
     ofxOsc
     ```
