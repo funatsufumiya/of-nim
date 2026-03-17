@@ -3,7 +3,7 @@
 type
   UpdateFn* = proc(user: pointer){.cdecl.}
   DrawFn*   = proc(user: pointer){.cdecl.}
-  KeyFn*    = proc(user: pointer, key: cint){.cdecl.}
+  KeyPressedFn*    = proc(user: pointer, key: cint){.cdecl.}
   KeyReleaseFn* = proc(user: pointer, key: cint){.cdecl.}
   MouseMoveFn* = proc(user: pointer, x: cint, y: cint){.cdecl.}
   MouseButtonFn* = proc(user: pointer, x: cint, y: cint, button: cint){.cdecl.}
@@ -19,7 +19,7 @@ type
 
 using UpdateFn = void(*)(void*);
 using DrawFn   = void(*)(void*);
-using KeyFn    = void(*)(void*, int);
+using KeyPressedFn    = void(*)(void*, int);
 using KeyReleaseFn = void(*)(void*, int);
 using MouseMoveFn = void(*)(void*, int, int);
 using MouseButtonFn = void(*)(void*, int, int, int);
@@ -32,7 +32,7 @@ using ExitFn = void(*)(void*);
 struct NimCallbacks {
   UpdateFn update;
   DrawFn draw;
-  KeyFn keyPressed;
+  KeyPressedFn keyPressed;
   KeyReleaseFn keyReleased;
   MouseMoveFn mouseMoved;
   MouseButtonFn mouseDragged;
@@ -51,8 +51,8 @@ inline NimCallbacks* ofn_makeCallbacks() {
   NimCallbacks* p = new NimCallbacks();
   p->update = nullptr;
   p->draw = nullptr;
-  p->keyPressed = nullptr;
   p->user = nullptr;
+  p->keyPressed = nullptr;
   p->keyReleased = nullptr;
   p->mouseMoved = nullptr;
   p->mouseDragged = nullptr;
@@ -133,7 +133,7 @@ extern "C" {
 
   inline void ofn_setUpdate_c(void* cb, UpdateFn f) { ((NimCallbacks*)cb)->update = f; }
   inline void ofn_setDraw_c(void* cb, DrawFn f) { ((NimCallbacks*)cb)->draw = f; }
-  inline void ofn_setKey_c(void* cb, KeyFn f) { ((NimCallbacks*)cb)->keyPressed = f; }
+  inline void ofn_setKeyPressed_c(void* cb, KeyPressedFn f) { ((NimCallbacks*)cb)->keyPressed = f; }
   inline void ofn_setUser_c(void* cb, void* user) { ((NimCallbacks*)cb)->user = user; }
   inline void ofn_setKeyReleased_c(void* cb, KeyReleaseFn f) { ((NimCallbacks*)cb)->keyReleased = f; }
   inline void ofn_setMouseMoved_c(void* cb, MouseMoveFn f) { ((NimCallbacks*)cb)->mouseMoved = f; }
@@ -156,8 +156,8 @@ proc ofn_runWithCallbacks_settings_c(settings: pointer, cb: pointer) {.importc: 
 
 proc ofn_setUpdate_c(cb: pointer, f: UpdateFn) {.importc: "ofn_setUpdate_c", cdecl.}
 proc ofn_setDraw_c(cb: pointer, f: DrawFn) {.importc: "ofn_setDraw_c", cdecl.}
-proc ofn_setKey_c(cb: pointer, f: KeyFn) {.importc: "ofn_setKey_c", cdecl.}
 proc ofn_setUser_c(cb: pointer, user: pointer) {.importc: "ofn_setUser_c", cdecl.}
+proc ofn_setKeyPressed_c(cb: pointer, f: KeyPressedFn) {.importc: "ofn_setKeyPressed_c", cdecl.}
 proc ofn_setKeyReleased_c(cb: pointer, f: KeyReleaseFn) {.importc: "ofn_setKeyReleased_c", cdecl.}
 proc ofn_setMouseMoved_c(cb: pointer, f: MouseMoveFn) {.importc: "ofn_setMouseMoved_c", cdecl.}
 proc ofn_setMouseDragged_c(cb: pointer, f: MouseButtonFn) {.importc: "ofn_setMouseDragged_c", cdecl.}
@@ -177,7 +177,7 @@ type OfApp* = object
 type OfAppConfig* = object
   update*: UpdateFn
   draw*: DrawFn
-  key*: KeyFn
+  keyPressed*: KeyPressedFn
   keyReleased*: KeyReleaseFn
   mouseMoved*: MouseMoveFn
   mouseDragged*: MouseButtonFn
@@ -194,7 +194,7 @@ type OfAppConfig* = object
 proc makeOfApp*(
   update: UpdateFn = nil;
   draw: DrawFn = nil;
-  key: KeyFn = nil;
+  keyPressed: KeyPressedFn = nil;
   keyReleased: KeyReleaseFn = nil;
   mouseMoved: MouseMoveFn = nil;
   mouseDragged: MouseButtonFn = nil;
@@ -213,7 +213,7 @@ proc makeOfApp*(
   a.user = user
   if update != nil: ofn_setUpdate_c(a.cb, update)
   if draw != nil: ofn_setDraw_c(a.cb, draw)
-  if key != nil: ofn_setKey_c(a.cb, key)
+  if keyPressed != nil: ofn_setKeyPressed_c(a.cb, keyPressed)
   if keyReleased != nil: ofn_setKeyReleased_c(a.cb, keyReleased)
   if mouseMoved != nil: ofn_setMouseMoved_c(a.cb, mouseMoved)
   if mouseDragged != nil: ofn_setMouseDragged_c(a.cb, mouseDragged)
@@ -232,7 +232,7 @@ proc makeOfApp*(cfg: OfAppConfig): OfApp =
   return makeOfApp(
     update = cfg.update,
     draw = cfg.draw,
-    key = cfg.key,
+    keyPressed = cfg.keyPressed,
     keyReleased = cfg.keyReleased,
     mouseMoved = cfg.mouseMoved,
     mouseDragged = cfg.mouseDragged,

@@ -6,14 +6,14 @@ import nimline
 #include "ofMain.h"
 """ .}
 
-proc nimUpdate(user: pointer) {.cdecl.} =
+proc red {.importcpp: "ofColor::red" .}
+
+proc update(user: pointer) {.cdecl.} =
     let r: float = global.ofGetFrameRate()
     let s = fmt"{r:.2f}"
     discard global.ofSetWindowTitle(s)
 
-proc red {.importcpp: "ofColor::red" .}
-
-proc nimDraw(user: pointer) {.cdecl.} =
+proc draw(user: pointer) {.cdecl.} =
     discard global.ofSetColor(red)
     discard global.ofDrawRectangle(
         global.ofGetMouseX() - 50,
@@ -21,5 +21,5 @@ proc nimDraw(user: pointer) {.cdecl.} =
         100, 100)
 
 when isMainModule:
-    var app = makeOfApp(update=nimUpdate, draw=nimDraw)
+    var app = makeOfApp(update=update, draw=draw)
     app.run(800, 600)
