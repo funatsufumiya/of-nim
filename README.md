@@ -65,6 +65,13 @@ $ nim c -r examples/cpp_interop.nim
 - Copy ofxXXX folder into `addons/ofxXXX` (such as ofxOsc)
 - Then try `nim c -r examples\osc_test.nim`
     - You can debug `addon_config.mk` parse log by  `-d:addonsDebug`, such as `nim c -d:addonsDebug -r examples\osc_test.nim`
+
+### NOTE: `import ofx_addons`
+
+When you use ofx addons, you need `import ofx_addons` on nim side. This includes `generated/addon_dependencies.nim` on nim side, in order to compile required C++ files.
+
+See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
+
 ## TODO
 
 - project generator
