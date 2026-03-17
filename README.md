@@ -1,5 +1,7 @@
 # of-nim
 
+nim openFrameworks integration
+
 openFrameworks v0.12.0, nim 2.2.8
 
 ```nim
@@ -50,6 +52,7 @@ $ ./scripts/init_mac.sh
 
 ```bash
 $ nim c -r examples/hello.nim
+$ nim c -r examples/cpp_interop.nim
 ```
 
 ## TODO
