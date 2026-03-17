@@ -145,7 +145,7 @@ extern "C" {
 """.}
 
 proc ofn_makeCallbacks_c(): pointer {.importc: "ofn_makeCallbacks_c", cdecl.}
-proc ofn_runWithCallbacks_c(w: cint, h: cint, cb: pointer) {.importc: "ofn_runWithCallbacks_c", cdecl.}
+proc ofn_runWithCallbacks_c(w: cint, h: cint, cb: pointer) {.importc: "ofn_runWithCallbacks_c", cdecl, used.}
 proc ofn_runWithCallbacks_fullscreen_c(w: cint, h: cint, cb: pointer, fullscreen: bool) {.importc: "ofn_runWithCallbacks_fullscreen_c", cdecl.}
 proc ofn_runWithCallbacks_settings_c(settings: pointer, cb: pointer) {.importc: "ofn_runWithCallbacks_settings_c", cdecl.}
 
