@@ -1,6 +1,7 @@
 import ofApp
 import nimline
 import ofx_addons
+import system
 
 {.emit: """
 #include "ofMain.h"
@@ -35,7 +36,11 @@ proc draw() {.cdecl.} =
 
 proc keyPressed(key: cint) {.cdecl.} =
     let ckey = cast[char](key)
-    echo "key: ", $ckey
+    # echo "key: ", $ckeyo
+    if ckey == 'f':
+        discard global.ofToggleFullscreen()
+    elif ckey == 'm':
+        echo "total mem: ", getTotalMem()
 
 when isMainModule:
     var app = makeOfApp(setup=setup, update=update, draw=draw, keyPressed=keyPressed)
