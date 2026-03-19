@@ -86,3 +86,4 @@ Using [`ofxImGui`](https://github.com/jvcleave/ofxImGui/tree/develop) (develop b
 ## TODO
 
 - Linux support (etc)
+- More addon tests, especially having (dyn) libs inside
