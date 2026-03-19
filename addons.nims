@@ -382,6 +382,9 @@ proc processAddons*(addonsMakePath: string, addonsDir: string, projectRoot: stri
     let addonPath = joinPath(addonsDir, n)
     if dirExists(addonPath):
       processAddonDir(addonPath, projectRoot, platformCandidates)
+    else:
+      let nl = "\n"
+      quit(fmt"[Error] referenced addon '{n}' not found under {addonsDir}{nl}")
 
   # emit generated Nim file with {.compile: ...} pragmas for discovered C/C++ sources
   if discoveredCppSources.len > 0:
