@@ -72,6 +72,9 @@ if preferredAddons.len > 0:
   let localAddonsDir = joinPath(projectRoot, "addons")
   if dirExists(localAddonsDir):
     processAddons(preferredAddons, localAddonsDir, projectRoot)
+  else:
+    let nl = "\n"
+    quit(fmt"[Error] addons file found: {preferredAddons}{nl}but addons directory not present: {localAddonsDir}{nl}Create the directory or remove the addons file and retry.{nl}")
 
 # const ofLibPath =
 when defined(windows):
