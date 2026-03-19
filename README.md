@@ -50,6 +50,8 @@ $ ./scripts/init_mac.sh
 
 ## Examples
 
+(You may need `nimble install nimline` and `nimble install cppstl` for C++ integration.)
+
 ```bash
 $ nim c -r examples/hello.nim
 $ nim c -r examples/cpp_interop.nim
