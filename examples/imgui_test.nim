@@ -36,7 +36,7 @@ proc draw() {.cdecl.} =
 
 proc keyPressed(key: cint) {.cdecl.} =
     let ckey = cast[char](key)
-    # echo "key: ", $ckeyo
+    # echo "key: ", $ckey
     if ckey == 'f':
         discard global.ofToggleFullscreen()
     elif ckey == 'm':
