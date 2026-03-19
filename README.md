@@ -70,3 +70,7 @@ $ nim c -r examples/cpp_interop.nim
 When you use ofx addons, you need `import ofx_addons` on nim side. This includes `generated/addon_dependencies.nim` on nim side, in order to compile required C++ files.
 
 See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
+
+## TODO
+
+- Linux support (etc)
