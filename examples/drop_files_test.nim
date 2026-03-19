@@ -48,12 +48,12 @@ proc baseName(path: string): string =
     return path
 
 proc filesDropped(info: pointer) {.cdecl.} =
-    let files = cast[ptr CppVector[CppString]](info)
-    echo "files: ", $(files[])
+    let files = cast[ptr CppVector[CppString]](info)[]
+    echo "files: ", $(files)
 
     var names: seq[string] = @[]
-    for i in 0 ..< files[].len:
-        let f = files[][i]
+    for i in 0 ..< files.len:
+        let f = files[i]
         names.add(baseName($f))
 
     str = wrapText(names.join(", "), 60)
