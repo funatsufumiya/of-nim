@@ -73,6 +73,14 @@ See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
 
 (If you find addon which is not working well, while original openFrameworks version is working, please create an issue or create a PR to fix them.)
 
+## Screenshots
+
+### [imgui_test](examples/imgui_test.nim)
+
+Using [`ofxImGui`](https://github.com/jvcleave/ofxImGui/tree/develop) (develop branch)
+
+![docs/imgui.png](docs/imgui.png)
+
 ## TODO
 
 - Linux support (etc)
