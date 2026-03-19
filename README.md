@@ -71,6 +71,8 @@ When you use ofx addons, you need `import ofx_addons` on nim side. This includes
 
 See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
 
+(If you find addon which is not working well, while original openFrameworks version is working, please craete issue or create PR to fix them.)
+
 ## TODO
 
 - Linux support (etc)
