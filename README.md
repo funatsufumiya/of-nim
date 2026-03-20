@@ -99,6 +99,24 @@ Using [`ofxImGui`](https://github.com/jvcleave/ofxImGui/tree/develop) (develop b
 
 ![docs/imgui.png](docs/imgui.png)
 
+### [hap_test](examples/hap_test.nim)
+
+Using [`ofxHapPlayer`](https://github.com/funatsufumiya/ofxHapPlayer/tree/feat/remove_ffmpeg) (NOTE that this is forked version)
+
+![docs/hap.png](docs/hap.png)
+
+```nim
+# $ cat addons/ofxHapPlayer/config.txt
+
+when defined(windows):
+    switch("cc", "vcc")
+    switch("passC", fmt"-I{addonRoot}\libs\snappy\include")
+    switch("passL", fmt"{addonRoot}\libs\snappy\lib\vs\x64\Release\snappy.lib")
+elif defined(macosx):
+    switch("passC", fmt"-I{addonRoot}/libs/snappy/include")
+    switch("passL", fmt"{addonRoot}/libs/snappy/lib/osx/libsnappy.dylib")
+```
+
 ## TODO
 
 - Linux support (etc)
