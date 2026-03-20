@@ -115,6 +115,7 @@ when defined(windows):
 elif defined(macosx):
     switch("passC", fmt"-I{addonRoot}/libs/snappy/include")
     switch("passL", fmt"{addonRoot}/libs/snappy/lib/osx/libsnappy.dylib")
+    switch("passL", fmt"-rpath {addonRoot}/libs")
 ```
 
 ## TODO
