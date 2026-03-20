@@ -67,13 +67,29 @@ $ nim c -r examples/cpp_interop.nim
 - Then try `nim c -r examples\osc_test.nim`
     - You can debug `addon_config.mk` parse log by  `-d:addonsDebug`, such as `nim c -d:addonsDebug -r examples\osc_test.nim`
 
-### NOTE: `import ofx_addons`
+### NOTE 1: `import ofx_addons`
 
 When you use ofx addons, you need `import ofx_addons` on nim side. This includes `generated/addon_dependencies.nim` on nim side, in order to compile required C++ files.
 
 See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
 
 (If you find addon which is not working well, while original openFrameworks version is working, please create an issue or create a PR to fix them.)
+
+### NOTE 2: config.txt
+
+Each `addons/ofxXXX` can have `config.txt`.
+This is tiny DSL of feels like partial `config.nims`
+
+```nim
+when defined(windows):
+    switch("passL", fmt"{addonRoot}\lib\mylib.lib")
+elif defined(macosx):
+    switch("passL", "-framework Cocoa")
+
+# this is comment
+# and debug
+echo fmt"debug: addonRoot = {addonRoot}"
+```
 
 ## Screenshots
 

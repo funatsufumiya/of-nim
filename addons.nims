@@ -2,6 +2,7 @@ import std/os
 import std/strutils
 import std/json
 import std/strformat
+include "config_parser.nims"
 
 when defined(addonsDebug):
   const debugAddons = true
@@ -161,6 +162,14 @@ proc addLink(path: string) =
 
 proc processAddonDir(addonDir: string, projectRoot: string, platformCandidates: seq[string]) =
   if not dirExists(addonDir): return
+  # parse a simple config.txt if provided by addon (restricted DSL)
+  let addonTxt = joinPath(addonDir, "config.txt")
+  if fileExists(addonTxt):
+    let addonRoot = addonDir
+    let (_, addonName) = splitPath(addonDir)
+    when defined(addonsDebug):
+      echo(fmt"[addon {addonName}] included: {addonTxt}")
+    parseConfigTxt(addonTxt, addonRoot, projectRoot, addonName)
   # parse addon_config.mk if present
   let cfgPath = joinPath(addonDir, "addon_config.mk")
   let sections = parseAddonConfigMk(cfgPath)
