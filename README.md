@@ -107,6 +107,8 @@ Using [`ofxHapPlayer`](https://github.com/funatsufumiya/ofxHapPlayer/tree/feat/r
 
 ![docs/hap.png](docs/hap.png)
 
+(ofxHapPlayer needed customized config for nim version)
+
 ```nim
 # $ cat addons/ofxHapPlayer/config.txt
 
