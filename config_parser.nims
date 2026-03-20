@@ -87,13 +87,26 @@ proc parseConfigTxt*(path: string, addonRoot: string, projectRoot: string, addon
     return activeStack[^1]
 
   for raw in lines:
-    var line = raw.strip()
-    if line.len == 0: continue
-    if line.startsWith("#"): continue
+    # compute leading indent (count spaces/tabs) without trimming trailing whitespace
+    var indent = 0
+    while indent < raw.len and (raw[indent] == ' ' or raw[indent] == '\t'):
+      indent.inc()
+    var ltrim = ""
+    if indent < raw.len:
+      ltrim = raw[indent..^1]
+    if ltrim.len == 0: continue
+    if ltrim.startsWith("#"): continue
+    if ltrim == "discard": continue
+    var line = ltrim
 
-    let indent = line.len - line.len
+    # if current line is not a control header and is at the same indent
+    # as the last pushed conditional, pop that conditional (it has ended)
+    if not (line.startsWith("if defined(") or line.startsWith("when defined(") or line.startsWith("elif defined(") or line.startsWith("else:")):
+      if indent == indentStack[^1] and indentStack.len > 1:
+        discard indentStack.pop()
+        discard activeStack.pop()
 
-    # adjust stacks according to indent
+    # adjust stacks according to indent (pop deeper blocks)
     while indent < indentStack[^1]:
       discard indentStack.pop()
       discard activeStack.pop()
@@ -107,27 +120,44 @@ proc parseConfigTxt*(path: string, addonRoot: string, projectRoot: string, addon
         name = name.split(")")[0]
       name = name.strip()
       var cond = name in defines
+      # pop any deeper or same-level blocks before adding this block
+      while indent < indentStack[^1]:
+        discard indentStack.pop()
+        discard activeStack.pop()
+      if indent == indentStack[^1] and indentStack.len > 1:
+        discard indentStack.pop()
+        discard activeStack.pop()
       indentStack.add indent
       activeStack.add curActive() and cond
       continue
     elif line.startsWith("elif defined("):
       # elif replaces last condition at same level
-      if indentStack.len > 1:
-        # pop previous condition for this level
-        if indent == indentStack[^1]:
-          discard activeStack.pop()
-        else:
-          # different indent; treat as new
-          discard
       var name = line.replace("elif defined(", "")
       if name.contains(")"):
         name = name.split(")")[0]
       name = name.strip()
       var cond = name in defines
+      # pop previous condition for this level (if present)
+      if indentStack.len > 1:
+        if indent == indentStack[^1]:
+          discard indentStack.pop()
+          discard activeStack.pop()
+        else:
+          # different indent; pop deeper blocks
+          while indent < indentStack[^1]:
+            discard indentStack.pop()
+            discard activeStack.pop()
       indentStack.add indent
       activeStack.add curActive() and cond
       continue
     elif line.startsWith("else:"):
+      # pop deeper or same-level blocks before adding else
+      while indent < indentStack[^1]:
+        discard indentStack.pop()
+        discard activeStack.pop()
+      if indent == indentStack[^1] and indentStack.len > 1:
+        discard indentStack.pop()
+        discard activeStack.pop()
       indentStack.add indent
       activeStack.add curActive() and not activeStack[^1]
       continue
