@@ -19,10 +19,6 @@ var player: ofxHapPlayer
 
 proc setup() {.cdecl.} =
     discard
-    # discard osc_sender.setup("127.0.0.1", 12345)
-    # discard osc_msg.setAddress("/test")
-    # discard osc_sender.send(osc_msg)
-    # discard osc_msg.clear()
 
 proc update() {.cdecl.} =
     let r: float = global.ofGetFrameRate()
@@ -31,7 +27,7 @@ proc update() {.cdecl.} =
 
     if is_loaded and player.isLoaded().to(bool):
         discard player.update()
-        # echo $player.getCurrentTime().to(float)
+        # echo $player.getPosition().to(float)
 
 proc draw() {.cdecl.} =
     discard global.ofSetColor(255)
@@ -67,14 +63,14 @@ proc filesDropped(info: pointer) {.cdecl.} =
     echo "dropped files: ", $(files)
 
     if files.len > 0 and 
-        (files[0].endsWith(".mov") or files[0].endsWith(".avi")):
+        (files[0].endsWith(".mov")):
         discard player.load(files[0])
         discard player.play()
         discard player.setLoopState(global.OF_LOOP_NORMAL);
 
         is_loaded = true
     else:
-        echo "[Warning] files dropped, but only .mov and .avi is supported!"
+        echo "[Warning] files dropped, but only .mov is supported!"
 
 when isMainModule:
     var app = makeOfApp(
