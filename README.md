@@ -1,5 +1,7 @@
 # of-nim
 
+![docs/of-nim-logo.png](docs/of-nim-logo.png)
+
 nim openFrameworks integration
 
 openFrameworks v0.12.0, nim 2.2.8
