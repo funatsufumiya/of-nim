@@ -78,7 +78,7 @@ See [`examples/osc_test.nim`](examples/osc_test.nim) for detail.
 ### NOTE 2: config.txt
 
 Each `addons/ofxXXX` can have `config.txt`.
-This is tiny DSL of feels like partial `config.nims`
+This is tiny DSL of feels like partial `config.nims` (but not real nim, just original tiny parser.)
 
 ```nim
 when defined(windows):
