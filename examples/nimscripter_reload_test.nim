@@ -4,8 +4,11 @@ import nimline
 import system
 import nimscripter
 import std/random
+import std/os
+import std/paths
 
 randomize()
+let projectRoot = parentDir(system.currentSourcePath)
 
 {.emit: """
 #include "ofMain.h"
@@ -33,24 +36,32 @@ proc drawAt(x, y: float, s:float = 30) =
 
 exportTo(myImpl, text, drawAt, mouseX, mouseY, color, randf)
 
-let script = NimScriptFile("""
-proc setup*() =
-  echo "hello from nimscript!"
+var intr: Option[Interpreter]
+let scriptPath = projectRoot / "nimscripter_reload_script.nims"
 
-proc update*() =
-  discard
+var is_firstload = true
 
-proc draw*() =
-  text("this is drawn from script!", 30, 30)
+proc reloadScript() =
+  if is_firstload:
+    echo "Loading script..."
+  else:
+    echo "Reloading script..."
 
-  color(randf(), randf(), randf())
-  drawAt(mouseX(), mouseY())
-""")
+  let script = NimScriptFile(readFile(scriptPath))
+  intr = loadScript(script, implNimScriptModule(myImpl))
 
-let intr = loadScript(script, implNimScriptModule(myImpl))
+  if is_firstload:
+    echo "Script loaded!"
+  else:
+    echo "Script reloaded!"
+
+  is_firstload = false
 
 proc setup() {.cdecl.} =
   discard global.ofSetFrameRate(60)
+  echo "projectRoot: ", projectRoot
+  echo "scriptPath: ", scriptPath
+  reloadScript()
   intr.invoke(setup)
 
 proc update() {.cdecl.} =
@@ -64,6 +75,9 @@ proc draw() {.cdecl.} =
   discard global.ofSetColor(255, 255, 255)
   intr.invoke(draw)
 
+  discard global.ofSetColor(255)
+  discard global.ofDrawBitmapString("type [R] to reload script", 30, 100)
+
 proc keyPressed(key: cint) {.cdecl.} =
   let ckey = cast[char](key)
   if ckey == 'f' or ckey == 'F':
@@ -71,6 +85,8 @@ proc keyPressed(key: cint) {.cdecl.} =
   elif key == global.OF_KEY_ESC or ckey == 'q' or ckey == 'Q':
     discard global.ofExit()
     quit()
+  elif ckey == 'r' or ckey == 'R':
+    reloadScript()
 
 when isMainModule:
   var app = makeOfApp(setup=setup, update=update, draw=draw, keyPressed=keyPressed)
