@@ -43,7 +43,8 @@ when defined(windows):
   switch("passC", "/DWIN32_LEAN_AND_MEAN")
   switch("passC", "/DNOMINMAX")
 else:
-  switch("passC", "-std=c++17")
+  # switch("passC", "-std=c++17")
+  switch("cpp.options.always", "-std=c++17")
   switch("passC", "-DOF_USING_STD_FS=1")
 
 switch("path", "src")
