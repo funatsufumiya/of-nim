@@ -124,5 +124,5 @@ elif defined(macosx):
 
 ## TODO
 
-- Linux support (etc)
+- Linux support (and others)
 - More addon tests, especially having (dyn) libs inside
