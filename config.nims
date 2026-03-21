@@ -35,6 +35,7 @@ switch("backend", "cpp")
 when defined(windows):
   # switch("cc", "vcc")
   switch("cc", "clang_cl")
+  switch("passC", "/INCREMENTAL")
   switch("passC", "/std:c++17")
   # force use of std::filesystem in headers (prevent boost/std mismatch)
   switch("passC", "/DOF_USING_STD_FS=1")
