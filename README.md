@@ -122,6 +122,12 @@ elif defined(macosx):
     switch("passL", fmt"-rpath {addonRoot}/libs")
 ```
 
+### [nimscripter_test](examples/nimscripter_test.nim)
+
+Need `nimble install nimscripter`
+
+![docs/script.png](docs/script.png)
+
 ## TODO
 
 - Linux support (and others)
