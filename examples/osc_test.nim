@@ -19,6 +19,7 @@ proc setup() {.cdecl.} =
     discard osc_msg.setAddress("/test")
     discard osc_sender.sendMessage(osc_msg)
     discard osc_msg.clear()
+    echo "OSC message (/test) sent to 127.0.0.1:12345"
 
 proc update() {.cdecl.} =
     discard
